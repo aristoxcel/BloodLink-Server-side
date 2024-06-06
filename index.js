@@ -3,7 +3,7 @@ require ('dotenv').config();
 const express = require("express");
 const app = express();
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 
@@ -25,6 +25,9 @@ async function run() {
     try {
 
         const userCollection = client.db('bloodBank').collection("users");
+        const recipientCollection = client.db('bloodBank').collection("recipient");
+
+
         app.post('/user', async(req, res)=>{
             const result = await userCollection.insertOne(req.body);
             res.send(result)
@@ -37,6 +40,57 @@ async function run() {
           res.send(result)
       })
 
+      // user status change
+      app.patch('/users/:id/status', async (req, res) => {
+        const id = req.params.id;
+        const { status } = req.body;
+        console.log(id)
+        const query = { _id: new ObjectId(id) }
+        console.log(query)
+
+        if (!status) {
+            return res.status(400).json({ error: 'Status is required' });
+        }
+
+        try {
+            const result = await userCollection.updateOne(query
+                ,
+                { $set: { status: status } }
+            );
+
+            if (result.matchedCount === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            res.json({ message: 'User status updated successfully' });
+        } catch (error) {
+            console.error('Error updating user status:', error);
+            res.status(500).json({ error: 'An error occurred while updating the user status' });
+        }
+    });
+      
+
+    // Update user role
+    app.patch('/users/:id/role', async (req, res) => {
+      const { id } = req.params;
+      const { role } = req.body;
+
+      try {
+          const query = { _id: new ObjectId(id) };
+          const update = { $set: { role: role } };
+          const result = await userCollection.updateOne(query, update);
+
+          if (result.modifiedCount > 0) {
+              res.status(200).send({ message: 'User role updated successfully' });
+          } else {
+              res.status(404).send({ message: 'User not found' });
+          }
+      } catch (error) {
+          console.error('Error updating user role:', error);
+          res.status(500).send({ message: 'Internal Server Error' });
+      }
+  });
+
 
 
         // profile data taken
@@ -46,6 +100,16 @@ async function run() {
           const result = await userCollection.find(query).toArray()
           res.send(result)
       })
+
+
+      // recipient collection post
+      app.post('/donationRequest', async(req, res)=>{
+        const result = await recipientCollection.insertOne(req.body);
+        res.send(result)
+    })
+
+
+      // -------------------------------------------------
 
 
       // await client.connect();
