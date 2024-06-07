@@ -47,6 +47,21 @@ async function run() {
         res.send(result)
     })
 
+
+    app.put('/user/:email', async(req, res)=>{
+      const email = req.params.email
+      const user = req.body
+      const query = { email }
+
+      const updateDoc = {
+        $set: { ...user},
+      }
+      const result = await userCollection.updateOne(query, updateDoc, {
+        "upsert":true
+    })
+      res.send(result)
+  })
+
       // user status change
       app.patch('/users/:id/status', async (req, res) => {
         const id = req.params.id;
