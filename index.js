@@ -48,19 +48,28 @@ async function run() {
     })
 
 
-    app.put('/user/:email', async(req, res)=>{
-      const email = req.params.email
-      const user = req.body
-      const query = { email }
-
-      const updateDoc = {
-        $set: { ...user},
+    app.put('/user/:email', async (req, res) => {
+      try {
+        const email = req.params.email;
+        const user = req.body;
+        const query = { email };
+    
+        const updateDoc = {
+          $set: { ...user },
+        };
+    
+        const result = await userCollection.updateOne(query, updateDoc, { upsert: true });
+    
+        if (result.modifiedCount === 0 && result.upsertedCount === 0) {
+          return res.status(404).send({ message: 'User not found' });
+        }
+    
+        res.send(result);
+      } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).send({ message: 'Failed to update user' });
       }
-      const result = await userCollection.updateOne(query, updateDoc, {
-        "upsert":true
-    })
-      res.send(result)
-  })
+    });
 
       // user status change
       app.patch('/users/:id/status', async (req, res) => {
@@ -129,6 +138,28 @@ async function run() {
         const result = await recipientCollection.insertOne(req.body);
         res.send(result)
     })
+
+
+    app.get('/donorReq/:email', async(req, res)=>{
+      const email = req.params.email
+      const query = {email}
+      const result = await recipientCollection.find(query).toArray()
+      res.send(result)
+  })
+
+  app.delete('/donorRequest/:id', async(req, res)=>{
+    const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await recipientCollection.deleteOne(query);
+      res.send(result)
+  })
+
+  app.get('/donorRequestDetails/:id', async(req, res)=>{
+    const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await recipientCollection.findOne(query);
+      res.send(result)
+  })
 
 
       // -------------------------------------------------
