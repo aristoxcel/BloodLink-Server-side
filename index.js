@@ -154,8 +154,8 @@ async function run() {
       res.send(result)
   })
 
-  app.get('/donorRequestDetails/:id', async(req, res)=>{
-    const id = req.params.id;
+  app.get('/donDetails/:id', async(req, res)=>{
+      const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await recipientCollection.findOne(query);
       res.send(result)
