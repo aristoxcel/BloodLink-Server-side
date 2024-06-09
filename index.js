@@ -123,6 +123,19 @@ async function run() {
   });
 
 
+  // ---------------------------------------------------
+//Public
+app.get('/allReq', async(req, res)=>{
+  const query = {status : 'Pending'}
+  const result = await recipientCollection.find(query).toArray()
+  res.send(result)
+})
+
+
+
+
+  // -------------------------------------------------
+
 
         // profile data taken
         app.get('/donar', async(req, res)=>{
@@ -161,6 +174,64 @@ async function run() {
       res.send(result)
   })
 
+  
+  app.put('/donDetails/:id', async(req, res)=>{
+    const id = req.params.id;
+    const { status } = req.body;
+    console.log(id)
+    const query = { _id: new ObjectId(id) }
+    console.log(query)
+
+    if (!status) {
+        return res.status(400).json({ error: 'Status is required' });
+    }
+
+    try {
+        const result = await recipientCollection.updateOne(query
+            ,
+            { $set: { status: status } }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({ message: 'User status updated successfully' });
+    } catch (error) {
+        console.error('Error updating user status:', error);
+        res.status(500).json({ error: 'An error occurred while updating the user status' });
+    }
+})
+
+
+  // Blood Donation request status change
+  app.patch('/request/:id/status', async (req, res) => {
+    const id = req.params.id;
+    const { status } = req.body;
+    console.log(id)
+    const query = { _id: new ObjectId(id) }
+    console.log(query)
+
+    if (!status) {
+        return res.status(400).json({ error: 'Status is required' });
+    }
+
+    try {
+        const result = await recipientCollection.updateOne(query
+            ,
+            { $set: { status: status } }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json({ message: 'User status updated successfully' });
+    } catch (error) {
+        console.error('Error updating user status:', error);
+        res.status(500).json({ error: 'An error occurred while updating the user status' });
+    }
+});
 
       // -------------------------------------------------
 
