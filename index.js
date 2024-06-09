@@ -131,6 +131,30 @@ app.get('/allReq', async(req, res)=>{
   res.send(result)
 })
 
+// search blood
+app.get('/donors', async (req, res) => {
+  try {
+    const { bloodGroup, district, upazila } = req.query;
+    const query = {};
+
+    if (bloodGroup) {
+      query.bloodGroup = bloodGroup;
+    }
+    if (district) {
+      query.district = district;
+    }
+    if (upazila) {
+      query.upazila = upazila;
+    }
+
+    const result = await userCollection.find(query).toArray();
+    res.status(200).send(result);
+  } catch (error) {
+    console.error('Error fetching donors:', error);
+    res.status(500).send({ message: 'An error occurred while fetching donors.' });
+  }
+});
+
 
 
 
