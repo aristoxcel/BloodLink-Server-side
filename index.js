@@ -26,6 +26,7 @@ async function run() {
 
         const userCollection = client.db('bloodBank').collection("users");
         const recipientCollection = client.db('bloodBank').collection("recipient");
+        const blogCollection = client.db('bloodBank').collection("blogs");
 
 
         app.post('/user', async(req, res)=>{
@@ -256,6 +257,47 @@ app.get('/donors', async (req, res) => {
         res.status(500).json({ error: 'An error occurred while updating the user status' });
     }
 });
+
+      // Admin Blog Collection
+      //--------------------------------------------------
+      // Create a new blog
+      app.post('/blogs', async (req, res) => {
+        const newBlog = req.body;
+        const result = await blogCollection.insertOne(newBlog);
+        res.json(result);
+      });
+
+
+      // Get all blogs
+      app.get('/blogs', async (req, res) => {
+        const blogs = await blogCollection.find().toArray();
+        res.json(blogs);
+      });
+
+      // Get single blog by ID
+      app.get('/blogs/:id', async (req, res) => {
+        const id = req.params.id;
+        const query ={_id: new ObjectId(id)}
+        const blog = await blogCollection.findOne(query);
+        res.json(blog);
+      });
+
+
+      // Update blog status
+      app.put('/blogs/:id', async (req, res) => {
+        const id = req.params.id;
+        const query ={_id: new ObjectId(id)}
+        const updatedStatus = req.body.status;
+        const result = await blogCollection.updateOne(query, { $set: { status: updatedStatus } });
+        res.json(result);
+      });
+
+      // Delete a blog
+      app.delete('/blogs/:id', async (req, res) => {
+        const id = req.params.id;
+        const result = await blogCollection.deleteOne({ _id: ObjectId(id) });
+        res.json(result);
+      });
 
       // -------------------------------------------------
 
