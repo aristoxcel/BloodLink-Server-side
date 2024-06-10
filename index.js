@@ -295,7 +295,7 @@ app.get('/donors', async (req, res) => {
       // Delete a blog
       app.delete('/blogs/:id', async (req, res) => {
         const id = req.params.id;
-        const result = await blogCollection.deleteOne({ _id: ObjectId(id) });
+        const result = await blogCollection.deleteOne({ _id: new ObjectId(id) });
         res.json(result);
       });
 
