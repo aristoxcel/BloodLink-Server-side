@@ -177,13 +177,20 @@ app.get('/donors', async (req, res) => {
         res.send(result)
     })
 
-
+    // My Donation request for Donar page
     app.get('/donorReq/:email', async(req, res)=>{
       const email = req.params.email
       const query = {email}
       const result = await recipientCollection.find(query).toArray()
       res.send(result)
   })
+
+
+  // All Donor Request for Admin
+  app.get('/donorReq', async(req, res)=>{
+    const result = await recipientCollection.find().toArray()
+    res.send(result)
+})
 
   app.delete('/donorRequest/:id', async(req, res)=>{
     const id = req.params.id;
@@ -268,6 +275,24 @@ app.get('/donors', async (req, res) => {
       });
 
 
+
+      // admin state
+      app.get('/admin-stat', async(req, res)=>{
+        const totalUser= await userCollection.countDocuments()
+        const totalRequest = await recipientCollection.countDocuments()
+        res.send({totalRequest, totalUser})
+      })
+
+
+
+
+
+
+
+
+
+
+
       // Get all blogs
       app.get('/blogs', async (req, res) => {
         const blogs = await blogCollection.find().toArray();
@@ -277,6 +302,7 @@ app.get('/donors', async (req, res) => {
       // Get single blog by ID
       app.get('/blogs/:id', async (req, res) => {
         const id = req.params.id;
+        console.log(id)
         const query ={_id: new ObjectId(id)}
         const blog = await blogCollection.findOne(query);
         res.json(blog);
