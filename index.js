@@ -4,12 +4,44 @@ const express = require("express");
 const app = express();
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 5000;
 
 
 
-app.use(cors());
+app.use(
+  cors({
+      origin: ['http://localhost:5173'],
+      credentials: true,
+  }),
+)
 app.use(express.json());
+app.use(cookieParser())
+// verify jwt middleware
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token
+  if (!token) return res.status(401).send({ message: 'unauthorized access' })
+  if (token) {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if (err) {
+        console.log(err)
+        return res.status(401).send({ message: 'unauthorized access' })
+      }
+
+      req.user = decoded
+      console.log(req.user)
+      next()
+    })
+  }
+}
+
+
+const cookeOption= {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production', true : false,
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+}
 
 const uri = `mongodb+srv://${process.env.Db_User}:${process.env.Db_Pass}@cluster0.kdbwfxu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -29,6 +61,39 @@ async function run() {
         const blogCollection = client.db('bloodBank').collection("blogs");
 
 
+
+        
+        // jwt generate
+        app.post('/jwt', async (req, res) => {
+          
+          try {
+              const user = req.body
+              const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                  expiresIn: '1d',
+              })
+              res
+                  .cookie('token', token, cookeOption)
+                  .send({
+                      success: true, token
+                  })
+          } catch (error) {
+              res.send({
+                  status: true,
+                  error: error.message,
+              })
+          }
+      })
+
+        // logout cookie clear
+      app.post('/logout', async (req, res) => {
+        const user = req.body
+        res
+            .clearCookie('token', { ...cookeOption, maxAge: 0 })
+            .send({ success: true})
+    })
+
+
+
         app.post('/user', async(req, res)=>{
             const result = await userCollection.insertOne(req.body);
             res.send(result)
@@ -36,7 +101,7 @@ async function run() {
 
 
         //all users data taken by admin
-        app.get('/users', async(req, res)=>{
+        app.get('/users', verifyToken, async(req, res)=>{
           const result = await userCollection.find().toArray();
           res.send(result)
       })
@@ -300,7 +365,7 @@ app.get('/donors', async (req, res) => {
       });
 
       // Get single blog by ID
-      app.get('/blogs/:id', async (req, res) => {
+      app.get('/blogs/:id', verifyToken, async (req, res) => {
         const id = req.params.id;
         console.log(id)
         const query ={_id: new ObjectId(id)}
